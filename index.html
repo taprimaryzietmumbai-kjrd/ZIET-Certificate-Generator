@@ -1,1 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ZIET Mumbai – Certificate Generator</title>
 
+<style>
+:root{
+  --navy:#17365d;
+  --blue:#2563eb;
+  --light:#f5f7fb;
+  --border:#d9e0ea;
+  --text:#172033;
+  --muted:#667085;
+  --success:#067647;
+  --danger:#b42318;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--light);
+  color:var(--text);
+}
+
+header{
+  background:linear-gradient(135deg,#17365d,#245b91);
+  color:#fff;
+  padding:22px 28px;
+  box-shadow:0 2px 8px #0002;
+}
+
+header h1{
+  margin:0;
+  font-size:25px;
+}
+
+header p{
+  margin:6px 0 0;
+  opacity:.9;
+}
+
+.container{
+  max-width:1180px;
+  margin:25px auto;
+  padding:0 18px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 2px 8px #0000000a;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+@media(max-width:760px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+
+label{
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+select,
+input{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  font-size:15px;
+  background:#fff;
+}
+
+button{
+  border:0;
+  border-radius:8px;
+  padding:11px 18px;
+  font-weight:700;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.primary{
+  background:var(--blue);
+  color:#fff;
+}
+
+.secondary{
+  background:#eef2f7;
+  color:#172033;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.status{
+  margin-top:14px;
+  padding:11px 13px;
+  border-radius:8px;
+  background:#f2f4f7;
+  color:var(--muted);
+  display:none;
+}
+
+.status.show{
+  display:block;
+}
+
+.status.ok{
+  background:#ecfdf3;
+  color:var(--success);
+}
+
+.status.err{
+  background:#fef3f2;
+  color:var(--danger);
+}
+
+.status.info{
+  background:#eff6ff;
+  color:#175cd3;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+}
+
+th,
+td{
+  text-align:left;
+  padding:9px;
+  border-bottom:1px solid var(--border);
+  font-size:14px;
+}
+
+th{
+  width:34%;
+  background:#f8fafc;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+
+.badge{
+  display:inline-block;
+  background:#eef4ff;
+  color:#175cd3;
+  border-radius:999px;
+  padding:4px 9px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.hidden{
+  display:none;
+}
+
+h2{
+  margin-top:0;
+  color:var(--navy);
+  font-size:19px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>ZIET Mumbai – Certificate Generator</h1>
+  <p>Master Google Sheet connected certificate generation interface</p>
+</header>
+
+<main class="container">
+
+  <!-- SHEET SELECTION -->
+  <section class="card">
+
+    <h2>1. Select Sheet / Tab</h2>
+
+    <div class="grid">
+
+      <div>
+        <label for="sheetSelect">
+          Master Spreadsheet Sheet
+        </label>
+
+        <select id="sheetSelect">
+          <option value="">
+            Loading sheets…
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label for="gidDisplay">
+          Selected GID
+        </label>
+
+        <input
+          id="gidDisplay"
+          readonly
+          placeholder="—"
+        >
+      </div>
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        class="secondary"
+        id="refreshSheets"
+      >
+        Refresh Sheets
+      </button>
+
+    </div>
+
+    <div
+      id="sheetStatus"
+      class="status"
+    ></div>
+
+  </section>
+
+
+  <!-- PARTICIPANT SELECTION -->
+  <section class="card">
+
+    <h2>2. Select Participant</h2>
+
+    <div>
+
+      <label for="participantSelect">
+        Participant
+      </label>
+
+      <select
+        id="participantSelect"
+        disabled
+      >
+        <option value="">
+          Select a sheet first…
+        </option>
+      </select>
+
+      <div
+        class="small"
+        id="participantCount"
+      ></div>
+
+    </div>
+
+    <div
+      id="participantStatus"
+      class="status"
+    ></div>
+
+  </section>
+
+
+  <!-- RECORD -->
+  <section
+    class="card hidden"
+    id="recordCard"
+  >
+
+    <h2>3. Participant Record</h2>
+
+    <div id="recordMeta"></div>
+
+    <table id="recordTable"></table>
+
+    <div class="actions">
+
+      <button
+        class="primary"
+        id="generateBtn"
+      >
+        Generate Certificate
+      </button>
+
+      <button
+        class="secondary"
+        id="reloadRecord"
+      >
+        Reload Record
+      </button>
+
+    </div>
+
+    <div
+      id="generateStatus"
+      class="status"
+    ></div>
+
+  </section>
+
+</main>
+
+
+<script>
+
+/* ============================================================
+   6.12.16 CERTIFICATE GENERATOR WEB APP
+   ============================================================ */
+
+const CERT_API_URL =
+'https://script.google.com/macros/s/AKfycbzPnTIzrJ1Gj1SPogh2-rIGQDFQJpVe3V5SpQa44q3l6c41W4OXdG2ilnuy4-FW7Ksa1g/exec';
+
+
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
+
+let sheets = [];
+
+let participants = [];
+
+let selectedGid = '';
+
+let selectedRow = '';
+
+
+/* ============================================================
+   SHORT DOM HELPER
+   ============================================================ */
+
+function $(id){
+  return document.getElementById(id);
+}
+
+
+/* ============================================================
+   STATUS MESSAGE
+   ============================================================ */
+
+function showStatus(
+  id,
+  message,
+  type='info'
+){
+
+  const el = $(id);
+
+  el.textContent = message;
+
+  el.className =
+    'status show ' + type;
+}
+
+
+function hideStatus(id){
+
+  $(id).className = 'status';
+
+}
+
+
+/* ============================================================
+   API CALL
+   ============================================================ */
+
+async function api(
+  action,
+  params={}
+){
+
+  const query =
+    new URLSearchParams({
+      action:action,
+      ...params
+    });
+
+  const url =
+    CERT_API_URL +
+    '?' +
+    query.toString();
+
+  const response =
+    await fetch(
+      url,
+      {
+        method:'GET',
+        cache:'no-store'
+      }
+    );
+
+  if(!response.ok){
+
+    throw new Error(
+      'HTTP ' +
+      response.status
+    );
+
+  }
+
+  const text =
+    await response.text();
+
+  let data;
+
+  try{
+
+    data =
+      JSON.parse(text);
+
+  }catch(error){
+
+    throw new Error(
+      'Backend returned a non-JSON response.'
+    );
+
+  }
+
+  if(
+    data &&
+    data.success === false
+  ){
+
+    throw new Error(
+      data.message ||
+      data.error ||
+      'Backend request failed.'
+    );
+
+  }
+
+  return data;
+
+}
+
+
+/* ============================================================
+   NORMALIZE SHEETS
+   ============================================================ */
+
+function normalizeSheets(data){
+
+  const raw =
+    data.sheets ||
+    data.data ||
+    data.rows ||
+    [];
+
+  if(!Array.isArray(raw)){
+
+    return [];
+
+  }
+
+  return raw.map(
+    (item,index)=>{
+
+      if(
+        typeof item === 'string'
+      ){
+
+        return {
+          name:item,
+          gid:''
+        };
+
+      }
+
+      return {
+
+        name:
+          item.name ||
+          item.title ||
+          item.sheetName ||
+          ('Sheet ' + (index + 1)),
+
+        gid:
+          String(
+            item.gid ??
+            item.sheetId ??
+            item.id ??
+            ''
+          )
+
+      };
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   NORMALIZE PARTICIPANTS
+   ============================================================ */
+
+function normalizeParticipants(data){
+
+  const raw =
+    data.participants ||
+    data.data ||
+    data.rows ||
+    [];
+
+  if(!Array.isArray(raw)){
+
+    return [];
+
+  }
+
+  return raw.map(
+    (item,index)=>{
+
+      if(Array.isArray(item)){
+
+        return {
+
+          row:index + 2,
+
+          label:
+            item[0] ||
+            ('Row ' + (index + 2)),
+
+          values:item
+
+        };
+
+      }
+
+      return {
+
+        row:
+          Number(
+            item.row ??
+            item.rowNumber ??
+            item._row ??
+            index + 2
+          ),
+
+        label:
+          item.label ||
+          item.name ||
+          item.participantName ||
+          item['Participant Name'] ||
+          item['Name'] ||
+          ('Row ' + (index + 2)),
+
+        values:item
+
+      };
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   LOAD MASTER SHEETS
+   ============================================================ */
+
+async function loadSheets(){
+
+  showStatus(
+    'sheetStatus',
+    'Loading sheets from Master Google Sheet…',
+    'info'
+  );
+
+  $('sheetSelect').disabled = true;
+
+  try{
+
+    const data =
+      await api('sheets');
+
+    sheets =
+      normalizeSheets(data);
+
+    $('sheetSelect').innerHTML =
+      '<option value="">Select sheet / tab…</option>';
+
+    sheets.forEach(
+      (sheet,index)=>{
+
+        const option =
+          document.createElement('option');
+
+        option.value =
+          sheet.gid;
+
+        option.textContent =
+          sheet.name +
+          (
+            sheet.gid
+              ? '  [' + sheet.gid + ']'
+              : ''
+          );
+
+        option.dataset.index =
+          index;
+
+        $('sheetSelect')
+          .appendChild(option);
+
+      }
+    );
+
+    $('sheetSelect').disabled =
+      false;
+
+    showStatus(
+      'sheetStatus',
+      sheets.length +
+      ' sheet(s) loaded from the Master Spreadsheet.',
+      'ok'
+    );
+
+  }catch(error){
+
+    $('sheetSelect').innerHTML =
+      '<option value="">Unable to load sheets</option>';
+
+    showStatus(
+      'sheetStatus',
+      error.message,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   LOAD PARTICIPANTS
+   ============================================================ */
+
+async function loadParticipants(gid){
+
+  selectedGid =
+    String(gid || '');
+
+  $('gidDisplay').value =
+    selectedGid;
+
+  $('participantSelect').disabled =
+    true;
+
+  $('recordCard')
+    .classList
+    .add('hidden');
+
+  $('participantSelect').innerHTML =
+    '<option value="">Loading participants…</option>';
+
+  hideStatus(
+    'participantStatus'
+  );
+
+  if(!selectedGid){
+
+    return;
+
+  }
+
+  try{
+
+    const data =
+      await api(
+        'data',
+        {
+          gid:selectedGid
+        }
+      );
+
+    participants =
+      normalizeParticipants(data);
+
+    $('participantSelect').innerHTML =
+      '<option value="">Select participant…</option>';
+
+    participants.forEach(
+      (participant,index)=>{
+
+        const option =
+          document.createElement('option');
+
+        option.value =
+          String(
+            participant.row
+          );
+
+        option.textContent =
+          participant.label;
+
+        option.dataset.index =
+          index;
+
+        $('participantSelect')
+          .appendChild(option);
+
+      }
+    );
+
+    $('participantSelect').disabled =
+      false;
+
+    $('participantCount').textContent =
+      participants.length +
+      ' participant record(s) loaded.';
+
+    showStatus(
+      'participantStatus',
+      'Participant population loaded directly from the selected Master Sheet tab.',
+      'ok'
+    );
+
+  }catch(error){
+
+    $('participantSelect').innerHTML =
+      '<option value="">Unable to load participants</option>';
+
+    $('participantCount').textContent =
+      '';
+
+    showStatus(
+      'participantStatus',
+      error.message,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   DISPLAY VALUE
+   ============================================================ */
+
+function displayValue(value){
+
+  if(
+    value === null ||
+    value === undefined ||
+    value === ''
+  ){
+
+    return '—';
+
+  }
+
+  return String(value);
+
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+   ============================================================ */
+
+function escapeHtml(value){
+
+  return String(value)
+
+    .replaceAll(
+      '&',
+      '&amp;'
+    )
+
+    .replaceAll(
+      '<',
+      '&lt;'
+    )
+
+    .replaceAll(
+      '>',
+      '&gt;'
+    )
+
+    .replaceAll(
+      '"',
+      '&quot;'
+    )
+
+    .replaceAll(
+      "'",
+      '&#039;'
+    );
+
+}
+
+
+/* ============================================================
+   RENDER RECORD
+   ============================================================ */
+
+function renderRecord(data){
+
+  const record =
+    data.record ||
+    data.data ||
+    data;
+
+  const values =
+    record.values ||
+    record.fields ||
+    record;
+
+  $('recordMeta').innerHTML =
+
+    '<span class="badge">' +
+
+    'GID: ' +
+
+    escapeHtml(
+      selectedGid
+    ) +
+
+    '</span> ' +
+
+    '<span class="badge">' +
+
+    'Row: ' +
+
+    escapeHtml(
+      selectedRow
+    ) +
+
+    '</span>';
+
+
+  const table =
+    $('recordTable');
+
+  table.innerHTML =
+    '';
+
+
+  if(Array.isArray(values)){
+
+    values.forEach(
+      (value,index)=>{
+
+        table.insertAdjacentHTML(
+          'beforeend',
+
+          '<tr>' +
+
+          '<th>' +
+
+          'Column ' +
+
+          (index + 1) +
+
+          '</th>' +
+
+          '<td>' +
+
+          escapeHtml(
+            displayValue(value)
+          ) +
+
+          '</td>' +
+
+          '</tr>'
+        );
+
+      }
+    );
+
+    return;
+
+  }
+
+
+  Object.keys(
+    values || {}
+  ).forEach(
+    key=>{
+
+      table.insertAdjacentHTML(
+        'beforeend',
+
+        '<tr>' +
+
+        '<th>' +
+
+        escapeHtml(key) +
+
+        '</th>' +
+
+        '<td>' +
+
+        escapeHtml(
+          displayValue(
+            values[key]
+          )
+        ) +
+
+        '</td>' +
+
+        '</tr>'
+      );
+
+    }
+  );
+
+}
+
+
+/* ============================================================
+   LOAD SELECTED RECORD
+   ============================================================ */
+
+async function loadRecord(){
+
+  if(
+    !selectedGid ||
+    !selectedRow
+  ){
+
+    return;
+
+  }
+
+  try{
+
+    const data =
+      await api(
+        'record',
+        {
+          gid:selectedGid,
+          row:selectedRow
+        }
+      );
+
+    renderRecord(data);
+
+    $('recordCard')
+      .classList
+      .remove('hidden');
+
+    hideStatus(
+      'generateStatus'
+    );
+
+  }catch(error){
+
+    $('recordCard')
+      .classList
+      .remove('hidden');
+
+    showStatus(
+      'generateStatus',
+      'Unable to load record: ' +
+      error.message,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   GENERATE CERTIFICATE
+   ============================================================ */
+
+async function generateCertificate(){
+
+  if(
+    !selectedGid ||
+    !selectedRow
+  ){
+
+    showStatus(
+      'generateStatus',
+      'Please select a participant first.',
+      'err'
+    );
+
+    return;
+
+  }
+
+
+  const button =
+    $('generateBtn');
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    'Generating…';
+
+
+  showStatus(
+    'generateStatus',
+    'Generating certificate from the locked Word master…',
+    'info'
+  );
+
+
+  try{
+
+    const data =
+      await api(
+        'generateDocx',
+        {
+          gid:selectedGid,
+          row:selectedRow
+        }
+      );
+
+
+    const url =
+      data.url ||
+      data.downloadUrl ||
+      data.fileUrl ||
+      data.download ||
+      data.webUrl;
+
+
+    if(url){
+
+      showStatus(
+        'generateStatus',
+        'Certificate generated successfully. Opening the generated file…',
+        'ok'
+      );
+
+      window.open(
+        url,
+        '_blank'
+      );
+
+    }else{
+
+      showStatus(
+        'generateStatus',
+        data.message ||
+        'Certificate generated successfully. Check the generator output.',
+        'ok'
+      );
+
+    }
+
+
+  }catch(error){
+
+    showStatus(
+      'generateStatus',
+      error.message,
+      'err'
+    );
+
+  }finally{
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      'Generate Certificate';
+
+  }
+
+}
+
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+
+$('sheetSelect')
+.addEventListener(
+  'change',
+  event=>{
+
+    loadParticipants(
+      event.target.value
+    );
+
+  }
+);
+
+
+$('participantSelect')
+.addEventListener(
+  'change',
+  event=>{
+
+    selectedRow =
+      event.target.value;
+
+    if(selectedRow){
+
+      loadRecord();
+
+    }else{
+
+      $('recordCard')
+        .classList
+        .add('hidden');
+
+    }
+
+  }
+);
+
+
+$('refreshSheets')
+.addEventListener(
+  'click',
+  loadSheets
+);
+
+
+$('reloadRecord')
+.addEventListener(
+  'click',
+  loadRecord
+);
+
+
+$('generateBtn')
+.addEventListener(
+  'click',
+  generateCertificate
+);
+
+
+/* ============================================================
+   INITIAL LOAD
+   ============================================================ */
+
+loadSheets();
+
+</script>
+
+</body>
+</html>
